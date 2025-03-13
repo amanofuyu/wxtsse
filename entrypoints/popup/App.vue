@@ -1,5 +1,13 @@
 <script lang="ts" setup>
-import HelloWorld from '@/components/HelloWorld.vue'
+const data = ref([] as any[])
+
+async function openSidePanel() {
+  browser.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+    if (tab?.id) {
+      browser.sidePanel.open({ tabId: tab.id })
+    }
+  })
+}
 </script>
 
 <template>
@@ -14,7 +22,12 @@ import HelloWorld from '@/components/HelloWorld.vue'
   <div class="d-btn d-btn-primary" @click="browser.runtime.openOptionsPage()">
     Options
   </div>
-  <HelloWorld msg="WXT + Vue" />
+  <div class="d-btn d-btn-primary" @click="openSidePanel()">
+    SidePanel
+  </div>
+  <div>
+    {{ data.join(', ') }}
+  </div>
 </template>
 
 <style scoped>

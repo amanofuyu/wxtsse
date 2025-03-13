@@ -1,14 +1,9 @@
 export default defineBackground(() => {
+  browser.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
+
   console.log('Hello background!', { id: browser.runtime.id })
 
-  browser.tabs.onUpdated.addListener(async (tabId, info, tab) => {
-    if (!tab.url)
-      return
-
-    await browser.sidePanel.setOptions({
-      tabId,
-      path: 'sidepanel.html',
-      enabled: true,
-    })
+  browser.tabs.onActivated.addListener(({ tabId }) => {
+    console.log('tabId', tabId)
   })
 })

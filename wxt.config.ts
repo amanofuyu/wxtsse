@@ -7,4 +7,7 @@ export default defineConfig({
   runner: {
     disabled: true,
   },
+  manifest: {
+
+  },
 })
