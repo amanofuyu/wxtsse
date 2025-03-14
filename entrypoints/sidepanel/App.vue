@@ -19,17 +19,6 @@ const messagesWithoutSystem = computed(() => {
 
 const isResponding = ref(false)
 
-function splitString(str: string, to: number) {
-  const subStrLength = Math.max(Math.ceil(str.length / to), 1)
-  const res: string[] = []
-
-  for (let i = 0; i < str.length; i += subStrLength) {
-    res.push(str.slice(i, i + subStrLength))
-  }
-
-  return res
-}
-
 async function chat() {
   if (!userMessage.value) {
     return
@@ -58,9 +47,16 @@ async function chat() {
       start() {
         console.log('[start]')
       },
-      write(chunk) {
+      async write(chunk) {
         console.log('[write]', chunk)
-        aiMessage.content = (aiMessage.content || '') + (chunk || '')
+        const { promise, resolve } = Promise.withResolvers<void>()
+
+        requestAnimationFrame(() => {
+          aiMessage.content = (aiMessage.content || '') + (chunk || '')
+          resolve()
+        })
+
+        return promise
       },
       close() {
         console.log('[close]')
@@ -68,7 +64,9 @@ async function chat() {
       abort(reason) {
         console.log('[abort]', reason)
       },
-    })
+    }, new CountQueuingStrategy({
+      highWaterMark: 60,
+    }))
 
     const transformStream = new TransformStream({
       transform(chunk, controller) {
@@ -80,38 +78,43 @@ async function chat() {
 
         console.log('[content]', content)
 
-        const strs = splitString(content, 2)
+        // controller.enqueue(content)
 
-        strs.forEach((str) => {
+        let i = 0
+        const length = content.length
+        const charsToShow = length > 100 ? 3 : (length > 50 ? 2 : 1)
+
+        while (i < length) {
+          // 这个desiredSize来自transformStream的readableStrategy
+          console.log('[desiredSize]', controller.desiredSize)
+
+          const hasBackpressure = typeof controller.desiredSize !== 'number' || controller.desiredSize < 0
+
+          const endIndex = hasBackpressure ? length : i + charsToShow
+
+          const str = content.slice(i, endIndex)
+
           controller.enqueue(str)
-        })
+
+          i = endIndex
+        }
       },
       flush(controller) {
         console.log('[flush]')
         // 终止转换，转换结束
         controller.terminate()
       },
-    })
+    }, new CountQueuingStrategy({
+      highWaterMark: 60,
+    }), new CountQueuingStrategy({
+      highWaterMark: 60,
+    }))
 
-    completion.toReadableStream().pipeThrough(new TextDecoderStream('utf-8')).pipeThrough(transformStream).pipeTo(writeableStream)
-
-    // const reader = readableStream.getReader()
-
-    // while (true) {
-    //   const { done, value } = await reader.read()
-    //   if (done) {
-    //     console.log('数据读取完毕')
-    //     break
-    //   }
-    //   console.log('数据块的原始值是:', value)
-    //   aiMessage.content = (aiMessage.content || '') + (value || '')
-    // }
-
-    // for await (const chunk of completion) {
-    //   console.log(chunk)
-
-    //   aiMessage.content = (aiMessage.content || '') + (chunk.choices[0].delta.content || '')
-    // }
+    completion
+      .toReadableStream()
+      .pipeThrough(new TextDecoderStream('utf-8'))
+      .pipeThrough(transformStream)
+      .pipeTo(writeableStream)
   }
   catch (error) {
     console.error(error)
