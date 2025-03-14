@@ -127,9 +127,9 @@ async function chatByEnter(e: KeyboardEvent) {
 </script>
 
 <template>
-  <div>
-    <div class="flex flex-col gap-4 h-screen max-h-screen p-2 text-base max-w-3xl mx-auto">
-      <div class="flex-1 overflow-y-auto overflow-x-hidden p-3">
+  <div class="flex gap-2 bg-base-300 h-screen max-h-screen p-2">
+    <main class="flex-1 bg-base-100 flex flex-col gap-4 rounded-xl p-2 text-base max-w-3xl mx-auto">
+      <div class="flex-1 overflow-y-auto overflow-x-hidden p-2">
         <div class="flex flex-col gap-6">
           <template v-for="message, i in messagesWithoutSystem" :key="i">
             <div v-if="message.role === 'user'" class="flex items-start justify-end gap-2">
@@ -146,8 +146,8 @@ async function chatByEnter(e: KeyboardEvent) {
         </div>
       </div>
 
-      <label class="bg-base-300 rounded-md overflow-hidden p-2 m-2 flex flex-col gap-2">
-        <textarea v-model="userMessage" class="d-textarea d-textarea-ghost !bg-transparent !outline-none w-full resize-none" @keypress.enter.prevent="chatByEnter" />
+      <label class="rounded-md overflow-hidden p-2 flex flex-col gap-2 border">
+        <textarea v-model="userMessage" class="d-textarea d-textarea-ghost !bg-transparent !outline-none w-full resize-none" placeholder="请输入内容..." @keypress.enter.prevent="chatByEnter" />
 
         <div class="flex">
           <button class="d-btn d-btn-primary d-btn-sm ml-auto" @click="chat()">
@@ -155,7 +155,23 @@ async function chatByEnter(e: KeyboardEvent) {
           </button>
         </div>
       </label>
-    </div>
+    </main>
+
+    <aside class="w-10 p-1 flex flex-col justify-between">
+      <div />
+
+      <div class="flex flex-col gap-2">
+        <div class="flex flex-col gap-2">
+          <button class="w-full aspect-square rounded-full flex items-center justify-center cursor-pointer hover:bg-base-100" @click="browser.runtime.openOptionsPage()">
+            设
+          </button>
+
+          <div className="bg-secondary text-secondary-content w-full aspect-square rounded-full flex items-center justify-center cursor-pointer">
+            <span class="font-bold">N</span>
+          </div>
+        </div>
+      </div>
+    </aside>
   </div>
 </template>
 
