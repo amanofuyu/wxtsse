@@ -82,7 +82,7 @@ async function chat() {
 
         let i = 0
         const length = content.length
-        const charsToShow = length > 100 ? 3 : (length > 50 ? 2 : 1)
+        const charsToShow = length > 100 ? 3 : (length > 30 ? 2 : 5)
 
         while (i < length) {
           // 这个desiredSize来自transformStream的readableStrategy
