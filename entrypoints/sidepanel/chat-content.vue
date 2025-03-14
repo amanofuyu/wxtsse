@@ -9,7 +9,7 @@ const html = computed(() => {
 </script>
 
 <template>
-  <div class="prose prose-invert" v-html="html" />
+  <div class="prose prose-invert !max-w-full" v-html="html" />
 </template>
 
 <style scoped></style>

@@ -78,6 +78,8 @@ async function chat() {
 
         const content = value.choices[0].delta.content || ''
 
+        console.log('[content]', content)
+
         const strs = splitString(content, 2)
 
         strs.forEach((str) => {
@@ -127,8 +129,8 @@ async function chatByEnter(e: KeyboardEvent) {
 </script>
 
 <template>
-  <div class="flex gap-2 bg-base-300 h-screen max-h-screen p-2">
-    <main class="flex-1 bg-base-100 flex flex-col gap-4 rounded-xl p-2 text-base max-w-3xl mx-auto">
+  <div class="flex gap-2 bg-base-300 h-screen max-h-screen p-2 overflow-hidden">
+    <main class="flex-1 bg-base-100 flex flex-col gap-4 rounded-xl p-2 text-base max-w-3xl mx-auto overflow-hidden">
       <div class="flex-1 overflow-y-auto overflow-x-hidden p-2">
         <div class="flex flex-col gap-6">
           <template v-for="message, i in messagesWithoutSystem" :key="i">
@@ -166,7 +168,7 @@ async function chatByEnter(e: KeyboardEvent) {
             设
           </button>
 
-          <div className="bg-secondary text-secondary-content w-full aspect-square rounded-full flex items-center justify-center cursor-pointer">
+          <div className="bg-secondary text-secondary-content w-full aspect-square rounded-full flex items-center justify-center cursor-pointer" @click="browser.runtime.sendMessage({ action: 'openLoginWindow' })">
             <span class="font-bold">N</span>
           </div>
         </div>
