@@ -18,6 +18,8 @@
     "tup": "taze major -I"
   },
   "dependencies": {
+    "@shikijs/langs": "^3.2.1",
+    "@shikijs/themes": "^3.2.1",
     "@tailwindcss/postcss": "^4.0.11",
     "markdown-it": "^14.1.0",
     "openai": "^4.87.3",
