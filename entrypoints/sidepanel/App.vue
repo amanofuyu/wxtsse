@@ -1,5 +1,7 @@
 <script lang="ts" setup>
 import type { ChatCompletionChunk, ChatCompletionMessageParam } from 'openai/resources/index.mjs'
+import type { ContentType } from './type'
+import { Fsa } from '@/utils/Fsa'
 import OpenAI from 'openai'
 import ChatContent from './chat-content.vue'
 
@@ -11,7 +13,14 @@ const openai = new OpenAI({
 
 const userMessage = ref('')
 
-const messages = reactive<Array<ChatCompletionMessageParam>>([{ role: 'system', content: 'You are a helpful assistant.' }])
+const messages = reactive<Array<ChatCompletionMessageParam>>([{ role: 'system', content: [
+  {
+    type: 'text',
+    text: 'You are a helpful assistant.',
+  },
+] }])
+
+const fileList = shallowRef<Array<string>>([])
 
 const messagesWithoutSystem = computed(() => {
   return messages.filter(message => message.role !== 'system')
@@ -26,7 +35,21 @@ async function chat() {
 
   isResponding.value = true
 
-  messages.push({ role: 'user', content: userMessage.value })
+  const message = { role: 'user', content: [
+    {
+      type: 'text',
+      text: userMessage.value,
+    },
+    ...fileList.value.map(content => ({
+      type: 'image_url',
+      image_url: {
+        url: content,
+      },
+    })),
+  ] } as ChatCompletionMessageParam
+
+  messages.push(message)
+  fileList.value = []
   userMessage.value = ''
 
   try {
@@ -34,11 +57,17 @@ async function chat() {
       model: 'gemini-2.0-flash',
       messages: toRaw(messages),
       stream: true,
+      // modalities: ['text', 'image'] as any,
+    })
+
+    const textContent = reactive({
+      type: 'text',
+      text: '',
     })
 
     const aiMessage = reactive({
       role: 'assistant',
-      content: '',
+      content: [textContent],
     }) as ChatCompletionMessageParam
 
     messages.push(aiMessage)
@@ -52,7 +81,7 @@ async function chat() {
         const { promise, resolve } = Promise.withResolvers<void>()
 
         requestAnimationFrame(() => {
-          aiMessage.content = (aiMessage.content || '') + (chunk || '')
+          textContent.text = (textContent.text || '') + (chunk || '')
           resolve()
         })
 
@@ -129,6 +158,26 @@ async function chatByEnter(e: KeyboardEvent) {
     chat()
   }
 }
+
+function imageFileToBase64(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+async function uploadImage() {
+  const fileHandle = await Fsa.file()
+  const file = await fileHandle.getFile()
+  const base64 = await imageFileToBase64(file)
+  fileList.value = [...fileList.value, base64]
+}
+
+async function generateImage() {
+  console.log('generateImage')
+}
 </script>
 
 <template>
@@ -137,29 +186,47 @@ async function chatByEnter(e: KeyboardEvent) {
       <div class="flex-1 overflow-y-auto overflow-x-hidden p-2">
         <div class="flex flex-col gap-6">
           <template v-for="message, i in messagesWithoutSystem" :key="i">
-            <div v-if="message.role === 'user'" class="flex items-start justify-end gap-2">
+            <div v-if="message.role === 'user'" class="flex flex-col items-end justify-end gap-2">
+              <div v-for="image in (message.content as ContentType[]).filter(item => item.type === 'image_url')" :key="image.image_url.url" class="w-20 rounded-md   overflow-hidden">
+                <img class="w-full" :src="image.image_url.url" alt="">
+              </div>
+
               <div class="bg-base-200 rounded-md py-2 px-4 max-w-full overflow-hidden">
-                <ChatContent :content="(message.content as string)" />
+                <ChatContent :content="(message.content as ContentType[]).find(item => item.type === 'text')!.text" />
               </div>
             </div>
             <div v-if="message.role === 'assistant'" class="flex items-start gap-2">
               <div class="max-w-full overflow-hidden">
-                <ChatContent :content="(message.content as string)" />
+                <ChatContent :content="(message.content as ContentType[]).find(item => item.type === 'text')!.text" />
               </div>
             </div>
           </template>
         </div>
       </div>
 
-      <label class="rounded-md overflow-hidden p-2 flex flex-col gap-2 border">
-        <textarea v-model="userMessage" class="d-textarea d-textarea-ghost !bg-transparent !outline-none w-full resize-none" placeholder="请输入内容..." @keypress.enter.prevent="chatByEnter" />
-
-        <div class="flex">
-          <button class="d-btn d-btn-primary d-btn-sm ml-auto" @click="chat()">
-            回复
-          </button>
+      <div class="rounded-md overflow-hidden p-2 flex flex-col gap-2 border">
+        <div v-show="fileList.length > 0" class="grid grid-cols-4 gap-2">
+          <div v-for="file, i in fileList" :key="i" class="aspect-square rounded-md overflow-hidden">
+            <img :src="file" class="w-full h-full object-cover">
+          </div>
         </div>
-      </label>
+
+        <label class="flex flex-col gap-2">
+          <textarea v-model="userMessage" class="d-textarea d-textarea-ghost !bg-transparent !outline-none w-full resize-none" placeholder="请输入内容..." @keypress.enter.prevent="chatByEnter" />
+
+          <div class="flex justify-between items-center">
+            <div>
+              <button class="d-btn d-btn-primary d-btn-sm" @click="uploadImage()">上传</button>
+            </div>
+
+            <div class=" ml-auto">
+              <button class="d-btn d-btn-primary d-btn-sm" @click="chat()">
+                回复
+              </button>
+            </div>
+          </div>
+        </label>
+      </div>
     </main>
 
     <aside class="w-10 p-1 flex flex-col justify-between">
@@ -167,6 +234,10 @@ async function chatByEnter(e: KeyboardEvent) {
 
       <div class="flex flex-col gap-2">
         <div class="flex flex-col gap-2">
+          <button class="w-full aspect-square rounded-full flex items-center justify-center cursor-pointer hover:bg-base-100" @click="generateImage()">
+            点
+          </button>
+
           <button class="w-full aspect-square rounded-full flex items-center justify-center cursor-pointer hover:bg-base-100" @click="browser.runtime.openOptionsPage()">
             设
           </button>
