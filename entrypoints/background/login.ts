@@ -1,12 +1,4 @@
-export default defineBackground(() => {
-  browser.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
-
-  console.log('Hello background!', { id: browser.runtime.id })
-
-  browser.tabs.onActivated.addListener(({ tabId }) => {
-    console.log('tabId', tabId)
-  })
-
+export function handleLogin() {
   chrome.runtime.onMessage.addListener(
     (request, sender, _sendResponse) => {
       if (request.action === 'openLoginWindow') {
@@ -44,4 +36,4 @@ export default defineBackground(() => {
       console.log(`Login window created with id: ${window?.id}`)
     })
   }
-})
+}

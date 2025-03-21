@@ -8,6 +8,6 @@ export default defineConfig({
     disabled: true,
   },
   manifest: {
-
+    permissions: ['contextMenus'],
   },
 })
