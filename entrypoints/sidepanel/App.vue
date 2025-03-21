@@ -174,10 +174,6 @@ async function uploadImage() {
   const base64 = await imageFileToBase64(file)
   fileList.value = [...fileList.value, base64]
 }
-
-async function generateImage() {
-  console.log('generateImage')
-}
 </script>
 
 <template>
@@ -234,10 +230,6 @@ async function generateImage() {
 
       <div class="flex flex-col gap-2">
         <div class="flex flex-col gap-2">
-          <button class="w-full aspect-square rounded-full flex items-center justify-center cursor-pointer hover:bg-base-100" @click="generateImage()">
-            点
-          </button>
-
           <button class="w-full aspect-square rounded-full flex items-center justify-center cursor-pointer hover:bg-base-100" @click="browser.runtime.openOptionsPage()">
             设
           </button>
