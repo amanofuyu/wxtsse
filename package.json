@@ -12,10 +12,11 @@
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "vue-tsc --noEmit",
-    "postinstall": "wxt prepare",
+    "postinstall": "simple-git-hooks && wxt prepare",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "tup": "taze major -I"
+    "tup": "taze major -I",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@shikijs/langs": "^3.2.1",
