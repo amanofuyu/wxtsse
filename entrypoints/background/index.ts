@@ -1,5 +1,5 @@
-import { handleLogin } from "./login"
-import { handleContextMenus } from "./contextMenus"
+import { handleContextMenus } from './contextMenus'
+import { handleLogin } from './login'
 
 export default defineBackground({
   main() {
