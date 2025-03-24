@@ -45,5 +45,11 @@
     "typescript": "5.6.3",
     "vue-tsc": "^2.2.8",
     "wxt": "^0.19.29"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
   }
 }
